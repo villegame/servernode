@@ -6,7 +6,17 @@ var io = require('socket.io')(http);
 //io.sockets.on('connection', function(socket) {
 io.on('connection', function(socket) {
     console.log('client connected, sending message...');
-    socket.emit('message', 'Hello World!');
+    socket.emit('message', {name: "dataman", more: "more data"});
+    
+    socket.on('disconnect', function() {
+        console.log('client disconnected');
+    });
+    
+    socket.on('Hello', function(data) {
+        console.log('got a hello');
+        console.log("got float: " + data.field1 + " and string: " + data.field2);
+        socket.emit("Message2");
+    });
 });
 
 http.listen(7777, function() {
