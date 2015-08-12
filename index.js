@@ -6,7 +6,7 @@ var io = require('socket.io')(http);
 //io.sockets.on('connection', function(socket) {
 io.on('connection', function(socket) {
     console.log('client connected, sending message...');
-    socket.emit('message', {name: "dataman", more: "more data"});
+    socket.emit('connected', {name: "dataman", more: "more data"});
     
     socket.on('disconnect', function() {
         console.log('client disconnected');
