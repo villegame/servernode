@@ -15,7 +15,7 @@ io.on('connection', function(socket) {
     socket.on('Hello', function(data) {
         console.log('got a hello');
         console.log("got float: " + data.field1 + " and string: " + data.field2);
-        socket.emit("Message2");
+        socket.emit("Reply");
     });
 });
 
