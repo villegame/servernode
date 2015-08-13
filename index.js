@@ -17,6 +17,11 @@ io.on('connection', function(socket) {
         console.log("got float: " + data.field1 + " and string: " + data.field2);
         socket.emit("Reply");
     });
+    
+    socket.on('Shoot', function(data) {
+        console.log('Shooting...');
+        io.emit('Shoot', data);
+    });
 });
 
 http.listen(7777, function() {
