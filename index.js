@@ -22,6 +22,11 @@ io.on('connection', function(socket) {
         console.log('Shooting...');
         io.emit('Shoot', data);
     });
+    
+    socket.on('Death', function(data) {
+        console.log('Death...');
+        io.emit('Death', data);
+    });
 });
 
 http.listen(7777, function() {
