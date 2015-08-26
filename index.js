@@ -42,11 +42,11 @@ io.on('connection', function(socket) {
     });
 });
 
-var server_port = process.env.OPENSHIFT_NODEJS_PORT || 8080
+var server_port = process.env.OPENSHIFT_NODEJS_PORT || 7777
 var server_ip_address = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1'
 
 // can listen just by port too..
-http.listen(server_port, server_ip_address, function() {
+http.listen(server_port, function() {
 //http.listen(server_port, function() {
     console.log('listening to ' + server_ip_address + ":" + server_port);
 });
