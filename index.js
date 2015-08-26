@@ -4,6 +4,7 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
 var playerIds = [];
+var playerSockets = [];
 
 //io.sockets.on('connection', function(socket) {
 io.on('connection', function(socket) {
@@ -11,13 +12,18 @@ io.on('connection', function(socket) {
     
     var id = "";
     id += generateId();
+    
+    // this should be done better, so far the list indexes should match player id to socket
     playerIds.push(id);
+    playerSockets.push(socket);
+    
     console.log('generated id "' + id + '" for player');
     
     socket.emit('connected', {playerId: id});
     
     socket.on('disconnect', function() {
         console.log('client disconnected');
+        // TODO: update playerid and playersockets lists !!!
     });
     
     socket.on('Hello', function(data) {
@@ -34,6 +40,17 @@ io.on('connection', function(socket) {
     socket.on('Explosion', function(data) {
         console.log('Explosion...');
         io.emit('Explosion', data);
+    });
+    
+    socket.on('RadarScan', function(data) {
+        console.log('RadarScan...');
+        io.emit('RadarScan', data);
+    });
+    
+    socket.on('RadarReply', function(data) {
+        console.log('RadarReply...');
+        var tmpSocket = getSocketByPlayerId(data.player);
+        tmpSocket.emit('RadarReply', data);
     });
     
     socket.on('Death', function(data) {
@@ -66,6 +83,15 @@ function generateId()
     }
     while(!checkIfUniqueId(id))
     return id;
+}
+
+// get socket by player id
+function getSocketByPlayerId(id) {
+    for(var i = 0; i < playerIds.length; i++) {
+        if(id == playerIds[i]) {
+            return playerSockets[i];
+        }
+    }
 }
 
 function checkIfUniqueId(id) {
