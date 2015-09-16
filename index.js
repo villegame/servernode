@@ -3,8 +3,13 @@ var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
-var playerIds = [];
-var playerSockets = [];
+//var playerIds = [];
+//var playerSockets = [];
+
+var playerData = []; // contains: var player = {playerId: id, playerSocket: socket, playerName: name, playerKills: kills, playerDeaths: deaths};
+
+var presentWreckages = [];
+// contains: var wreckage = {wreckId:, playerName:, killerName:, wreckX:, wreckY:, wreckZ:};
 
 //io.sockets.on('connection', function(socket) {
 io.on('connection', function(socket) {
@@ -13,32 +18,46 @@ io.on('connection', function(socket) {
     var id = "";
     id += generateId();
     
-    // this should be done better, so far the list indexes should match player id to socket
-    playerIds.push(id);
-    playerSockets.push(socket);
+    console.log('generated id ' + id + ' for player');
     
-    console.log('generated id "' + id + '" for player');
+    // Create player in player list
+    var player = {playerId: id, playerSocket: socket, playerName: "-", playerKills: 0, playerDeaths: 0};
+    playerData.push(player);
     
     socket.emit('connected', {playerId: id});
     
+    //Send present wreckages
+    for(var i = 0; i < presentWreckages.length; i++) {
+        // send these as wreckageinputs or something else
+        socket.emit('Death', presentWreckages[i]);
+    }
+    
+    //Send current players and statistics
+    // ToBeDone
+    
     socket.on('disconnect', function() {
-        console.log('client disconnected');
+        console.log('player ' + getIdBySocket(socket) + " disconnected");
         // TODO: update playerid and playersockets lists !!!
+        deletePlayer(socket);
     });
     
-    socket.on('Hello', function(data) {
+    socket.on('PlayerName', function(data) {
+        addNameToPlayer(socket, data.playerName);
+    });
+    
+    socket.on('Hello', function(data) { // Dummy test function
         console.log('got a hello');
         console.log("got float: " + data.field1 + " and string: " + data.field2);
         socket.emit("Reply");
     });
     
     socket.on('Launch', function(data) {
-        console.log('Firing...');
+        console.log('Firing... '  + getIdBySocket(socket));
         io.emit('Launch', data);
     });
     
     socket.on('Explosion', function(data) {
-        console.log('Explosion...');
+        //console.log('Explosion... ' + data.x + ' ' + data.y + ' ' + data.z);
         io.emit('Explosion', data);
     });
     
@@ -55,7 +74,26 @@ io.on('connection', function(socket) {
     
     socket.on('Death', function(data) {
         console.log('Death...');
-        io.emit('Death', data);
+        
+        var wreckId = "";
+        wreckId += generateId();
+        
+        console.log('Player ' + getNameByPlayerId(data.killer) + ' destroyed player ' + getNameByPlayerId(data.player));
+        addKillToPlayer(data.killer);
+        addDeathToPlayer(data.player);
+        //TODO update statistics for everyone
+        logPlayerData();
+        
+        var wreckage = {wreckId: wreckId, playerName: getNameByPlayerId(data.player), killerName: getNameByPlayerId(data.killer), wreckX: data.x, wreckY: data.y, wreckZ: data.z};
+        presentWreckages.push(wreckage);
+        
+        io.emit('Death', wreckage);
+    });
+    
+    socket.on('RemoveWreck', function(data) {
+        console.log('Wreck removed... ' + data.wreckId);
+        io.emit('RemoveWreck', data);
+        deleteWreck(data.wreckId);
     });
 });
 
@@ -85,18 +123,118 @@ function generateId()
     return id;
 }
 
-// get socket by player id
-function getSocketByPlayerId(id) {
-    for(var i = 0; i < playerIds.length; i++) {
-        if(id == playerIds[i]) {
-            return playerSockets[i];
+// add kill to player
+function addKillToPlayer(id) {
+    for(var i = 0; i < playerData.length; i++) {
+        if(id == playerData[i].playerId) {
+            playerData[i].playerKills++;
+            return;
         }
     }
 }
 
+// add death to player
+function addDeathToPlayer(id) {
+    for(var i = 0; i < playerData.length; i++) {
+        if(id == playerData[i].playerId) {
+            playerData[i].playerDeaths++;
+            return;
+        }
+    }
+}
+
+// get socket by player id
+function getSocketByPlayerId(id) {
+    for(var i = 0; i < playerData.length; i++) {
+        if(id == playerData[i].playerId) {
+            return playerData[i].playerSocket;
+        }
+    }
+    return null;
+}
+
+// get name by player id
+function getNameByPlayerId(id) {
+    for(var i = 0; i < playerData.length; i++) {
+        if(id == playerData[i].playerId) {
+            return playerData[i].playerName;
+        }
+    }
+    return null;
+}
+
+// get player id by socket
+function getIdBySocket(socket) {
+    for(var i = 0; i < playerData.length; i++) {
+        if(socket == playerData[i].playerSocket) {
+            return playerData[i].playerId;
+        }
+    }
+    
+    return null;
+}
+
+// add player a name
+function addNameToPlayer(socket, name) {
+    for(var i = 0; i < playerData.length; i++) {
+        if(socket == playerData[i].playerSocket) {
+            playerData[i].playerName = name;
+            return;
+        }
+    }
+}
+
+// remove player from connected players list
+function deletePlayer(socket) {
+    var indexToRemove = -1;
+    for(var i = 0; i < playerData.length; i++) {
+        if(socket == playerData[i].playerSocket) {
+            indexToRemove = i;
+        }
+    }
+    
+    if(indexToRemove > -1) {
+        playerData.splice(indexToRemove,1);
+    }    
+}
+
+// check if generated id exists
 function checkIfUniqueId(id) {
-    for(var i = 0; i < playerIds.length; i++) {
-        if(id == playerIds[i]) return false;
+    for(var i = 0; i < playerData.length; i++) {
+        if(id == playerData[i].playerId) return false;
+    }
+    for(var i = 0; i < presentWreckages.length; i++) {
+        if(id == presentWreckages[i].wreckId) return false;
     }
     return true;
+}
+
+// remove wreck from wreck list
+function deleteWreck(wreckId) {
+    var indexToRemove = -1;
+    for(var i = 0; i < presentWreckages.length; i++) {
+        if(wreckId == presentWreckages[i].wreckId) {
+            indexToRemove = i;
+        }
+    }
+    
+    if(indexToRemove > -1) {
+        presentWreckages.splice(indexToRemove,1);
+    }    
+}
+
+// list playerData list (all connected players)
+function logPlayerData() {
+    console.log("players: " + playerData.length);
+    for(var i = 0; i < playerData.length; i++) {
+        console.log("id: " + playerData[i].playerId + " name:" + playerData[i].playerName + " socket:" + playerData[i].playerSocket + " kills:" + playerData[i].playerKills + " deaths:"  + playerData[i].playerDeaths);
+    }
+}
+
+// list presentWreckages list (all present wrecks)
+function logWreckages() {
+    console.log("wrecks: " + presentWreckages.length);
+    for(var i = 0; i < presentWreckages.length; i++) {
+        console.log("id: " + presentWreckages[i].wreckId + " x:" + presentWreckages[i].wreckX + " y:" + presentWreckages[i].wreckY + " z:" + presentWreckages[i].wreckZ);
+    }
 }
