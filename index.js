@@ -8,6 +8,8 @@ var io = require('socket.io')(http);
 
 var playerData = []; // contains: var player = {playerId: id, playerSocket: socket, playerName: name, playerKills: kills, playerDeaths: deaths};
 
+var statsData = []; // contains: var data = {playerName: name, playerKills: kills, playerDeaths: deaths};
+
 var presentWreckages = [];
 // contains: var wreckage = {wreckId:, playerName:, killerName:, wreckX:, wreckY:, wreckZ:};
 
@@ -37,12 +39,17 @@ io.on('connection', function(socket) {
     
     socket.on('disconnect', function() {
         console.log('player ' + getIdBySocket(socket) + " disconnected");
-        // TODO: update playerid and playersockets lists !!!
+        io.emit('DeletePlayer', {playerId: getIdBySocket(socket)});
         deletePlayer(socket);
     });
     
     socket.on('PlayerName', function(data) {
         addNameToPlayer(socket, data.playerName);
+        
+        // send statistics
+        for(var i = 0; i < playerData.length; i++) {
+            io.emit('StatsData', {playerId: playerData[i].playerId, playerName: playerData[i].playerName, playerKills: playerData[i].playerKills, playerDeaths: playerData[i].playerDeaths});
+        }
     });
     
     socket.on('Hello', function(data) { // Dummy test function
@@ -81,8 +88,12 @@ io.on('connection', function(socket) {
         console.log('Player ' + getNameByPlayerId(data.killer) + ' destroyed player ' + getNameByPlayerId(data.player));
         addKillToPlayer(data.killer);
         addDeathToPlayer(data.player);
-        //TODO update statistics for everyone
-        logPlayerData();
+        //logPlayerData();
+        
+        // send statistics
+        for(var i = 0; i < playerData.length; i++) {
+            io.emit('StatsData', {playerId: playerData[i].playerId, playerName: playerData[i].playerName, playerKills: playerData[i].playerKills, playerDeaths: playerData[i].playerDeaths});
+        }
         
         var wreckage = {wreckId: wreckId, playerName: getNameByPlayerId(data.player), killerName: getNameByPlayerId(data.killer), wreckX: data.x, wreckY: data.y, wreckZ: data.z};
         presentWreckages.push(wreckage);
@@ -221,6 +232,14 @@ function deleteWreck(wreckId) {
     if(indexToRemove > -1) {
         presentWreckages.splice(indexToRemove,1);
     }    
+}
+
+// generate stats table
+function makeStatsData() {
+    statsData.splice(0,statsData.length);
+    for(var i = 0; i < playerData.length; i++) {
+        statsData.push({playerId: playerData[i].playerId, playerName: playerData[i].playerName, playerKills: playerData[i].playerKills, playerDeaths: playerData[i].playerDeaths});
+    }
 }
 
 // list playerData list (all connected players)
