@@ -155,8 +155,6 @@ function generateId()
     var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     do {
         id = "";
-        //var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
         for( var i=0; i < 10; i++ )
             id += chars.charAt(Math.floor(Math.random() * chars.length));
 
