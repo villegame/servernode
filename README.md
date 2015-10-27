@@ -1,2 +1,2 @@
 # servernode
-simple server
+GunGame2 multiplayer server.
