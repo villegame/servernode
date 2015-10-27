@@ -19,11 +19,13 @@ var presentWreckages = [];
 //
 // MESSAGE HANDLING:
 //
+////////////////////
 
 // New connection
 io.on('connection', function(socket) {
     console.log('client connected, sending message...');
     
+    // Generate unique id for player
     var id = "";
     id += generateId();
     
@@ -79,10 +81,6 @@ io.on('connection', function(socket) {
     socket.on('Death', function(data) {
         console.log('Death...');
         
-        // Generate wreck id
-        var wreckId = "";
-        wreckId += generateId();
-        
         console.log('Player ' + getNameByPlayerId(data.killer) + ' destroyed player ' + getNameByPlayerId(data.player));
         
         // Update player statistics by adding kill and death
@@ -93,6 +91,10 @@ io.on('connection', function(socket) {
         for(var i = 0; i < playerData.length; i++) {
             io.emit('StatsData', {playerId: playerData[i].playerId, playerName: playerData[i].playerName, playerKills: playerData[i].playerKills, playerDeaths: playerData[i].playerDeaths});
         }
+        
+        // Generate wreck id
+        var wreckId = "";
+        wreckId += generateId();
         
         // Create wreckage item and add it to wreckage list
         var wreckage = {wreckId: wreckId, playerName: getNameByPlayerId(data.player), killerName: getNameByPlayerId(data.killer), wreckX: data.x, wreckY: data.y, wreckZ: data.z};
@@ -130,16 +132,17 @@ io.on('connection', function(socket) {
 
 //////////////////////////////////////////
 //
-// SERVER LISTENER:
+// PORT LISTENER:
 //
+////////////////////
 
 // Variables for openshift service
-var server_port = process.env.OPENSHIFT_NODEJS_PORT || 7777
-var server_ip_address = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1'
+var server_port = process.env.OPENSHIFT_NODEJS_PORT || 7777             // CHANGE THIS TO PORT OF YOUR CHOICE
+var server_ip_address = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1'  // CHANGE THIS TO YOUR IP, OR USE PORT ONLY (below)
 
-// Can listen just by port too as commented, ip required by openshift
-http.listen(server_port, server_ip_address,  function() {
-//http.listen(server_port, function() {
+// Can listen just by port too (commented line), ip required by openshift
+http.listen(server_port, server_ip_address,  function() {               // COMMENT THIS LINE AND
+//http.listen(server_port, function() {                                 // UNCOMMENT THIS TO USE SERVER'S OWN IP AUTOMATICALLY
     console.log('listening to ' + server_ip_address + ":" + server_port);
 });
 
@@ -147,6 +150,7 @@ http.listen(server_port, server_ip_address,  function() {
 //
 // FUNCTIONS:
 //
+////////////////////
 
 // Generate unique, random Id
 function generateId()
@@ -264,7 +268,9 @@ function deleteWreck(wreckId) {
 
 // Generate stats table
 function makeStatsData() {
+    // Clear existing data
     statsData.splice(0,statsData.length);
+    // Fill with new data
     for(var i = 0; i < playerData.length; i++) {
         statsData.push({playerId: playerData[i].playerId, playerName: playerData[i].playerName, playerKills: playerData[i].playerKills, playerDeaths: playerData[i].playerDeaths});
     }
