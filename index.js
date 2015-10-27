@@ -19,7 +19,6 @@ var presentWreckages = [];
 //
 // MESSAGE HANDLING:
 //
-//////////////////////////////////////////
 
 // New connection
 io.on('connection', function(socket) {
@@ -133,7 +132,6 @@ io.on('connection', function(socket) {
 //
 // SERVER LISTENER:
 //
-//////////////////////////////////////////
 
 // Variables for openshift service
 var server_port = process.env.OPENSHIFT_NODEJS_PORT || 7777
@@ -149,7 +147,6 @@ http.listen(server_port, server_ip_address,  function() {
 //
 // FUNCTIONS:
 //
-//////////////////////////////////////////
 
 // Generate unique, random Id
 function generateId()
