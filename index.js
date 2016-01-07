@@ -12,7 +12,7 @@ var playerData = [];
 var statsData = []; 
 
 // Present wreckage positions on game area
-// contains: var wreckage = {wreckId:, playerName:, killerName:, wreckX:, wreckY:, wreckZ:};
+// contains: var wreckage = {wreckId:, playerName:, killerName:, wreckX:, wreckY:, wreckZ:, wreckRX, wreckRY, wreckRZ, wreckRW};
 var presentWreckages = [];
 
 //////////////////////////////////////////
@@ -97,7 +97,7 @@ io.on('connection', function(socket) {
         wreckId += generateId();
         
         // Create wreckage item and add it to wreckage list
-        var wreckage = {wreckId: wreckId, playerName: getNameByPlayerId(data.player), killerName: getNameByPlayerId(data.killer), wreckX: data.x, wreckY: data.y, wreckZ: data.z};
+        var wreckage = {wreckId: wreckId, playerName: getNameByPlayerId(data.player), killerName: getNameByPlayerId(data.killer), wreckX: data.x, wreckY: data.y, wreckZ: data.z, wreckRX: data.qx, wreckRY: data.qy, wreckRZ: data.qz, wreckRW: data.qw};
         presentWreckages.push(wreckage);
         
         // Emit death message for all clients
