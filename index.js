@@ -122,6 +122,11 @@ io.on('connection', function(socket) {
         deletePlayer(socket);
     });
     
+    // Test function for broadcasting position data
+    socket.on('PositionData', function(data) {
+    	io.emit('PositionData', data);
+    });
+    
     // Dummy test function
     socket.on('Hello', function(data) {
         console.log('got a hello');
