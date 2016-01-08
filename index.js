@@ -73,8 +73,14 @@ io.on('connection', function(socket) {
     // Client that was hit by radar scan, returns message to scanning player
     socket.on('RadarReply', function(data) {
         console.log('RadarReply...');
-        var tmpSocket = getSocketByPlayerId(data.player);
-        tmpSocket.emit('RadarReply', data);
+        if(data.revealforall == true) {
+            console.log('RadarReply for all!');
+            io.emit('RadarReply', data);
+        }
+        else {
+            var tmpSocket = getSocketByPlayerId(data.player);
+            tmpSocket.emit('RadarReply', data);
+        }
     });
     
     // Client sent death message (player died)
